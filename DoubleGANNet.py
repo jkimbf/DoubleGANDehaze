@@ -3,6 +3,7 @@ from Unet import UNet
 from Discriminator import Discriminator
 from Fusion_Discriminator import Fusion_Discriminator
 from Losses import *
+from laplace_utils import ycbcr_to_rgb, get_laplacian_kernel2d
 
 
 def gaussian(window_size, sigma):
@@ -74,6 +75,24 @@ def ssim(img1, img2, window_size = 11, size_average = True):
     return _ssim(img1, img2, window, window_size, channel, size_average)
 
 
+from torch.autograd import Variable
+import numpy as np
+from math import exp
+
+
+def gaussian(window_size, sigma):
+    gauss = torch.Tensor([exp(-(x - window_size//2)**2/float(2*sigma**2)) for x in range(window_size)])
+    return gauss/gauss.sum()
+
+
+def create_window(window_size, channel):
+    _1D_window = gaussian(window_size, 3).unsqueeze(1)
+    _2D_window = _1D_window.mm(_1D_window.t()).float().unsqueeze(0).unsqueeze(0)
+    window = Variable(_2D_window.expand(channel, 1, window_size, window_size).contiguous())
+    return window
+
+
+
 class DoubleGANNet(nn.Module):
 
     def __init__(self, unet_input, unet_output, discriminator_input):
@@ -95,6 +114,8 @@ class DoubleGANNet(nn.Module):
         content_loss = ContentLoss()
         ssim = SSIM(window_size = 11)
         bce = nn.BCELoss()
+        gaussian_window = create_window(15, 3)
+        laplace_filter = get_laplacian_kernel2d(3)
 
         self.add_module('unet', unet)
         self.add_module('discriminator', discriminator)
@@ -106,16 +127,20 @@ class DoubleGANNet(nn.Module):
         self.add_module('ssim_loss', ssim)
         self.add_module('bce_loss', bce)
         
+        
+        self.LF_filter = gaussian_window
+        self.HF_filter = laplace_filter[None, None, :, :]
+        
 
         self.unet_optimizer = optim.Adam(
             unet.parameters(), 
-            lr = float(0.002),
+            lr = float(0.00001),
             betas=(0.9, 0.999)
             )
 
         self.dis_optimizer = optim.Adam(
              params=discriminator.parameters(),
-             lr=float(0.002),
+             lr=float(0.00001),
              betas=(0.9, 0.999)
              )
 
@@ -146,14 +171,38 @@ class DoubleGANNet(nn.Module):
         dis_loss = 0
 
         outputs = self.unet(haze_images.cuda())
-        print("G(I) shape:", outputs.shape)
+        # print("G(I) shape:", outputs.shape)
+        # G(I) shape: torch.Size([8, 3, 512, 512])
+
+
+        """ Extract HF & LF of outputs(=G(I)) and concat """
+        outputs_LF = F3.conv2d(outputs, self.LF_filter.cuda(), padding='same', groups=3)
+
+        outputs_rgb = ycbcr_to_rgb(outputs)
+        outputs_gray = transforms.Grayscale(num_output_channels=1)(outputs_rgb)
+        outputs_HF = F3.conv2d(outputs_gray.cuda(), self.HF_filter.cuda(), padding='same', groups=1)
+
+        outputs = torch.cat((outputs, outputs_LF, outputs_HF), dim=1)
+
+        """ Extract HF & LF of dehaze_images(=GT image) and concat """
+        GT_LF = F3.conv2d(dehaze_images, self.LF_filter.cuda(), padding='same', groups=3)
+        
+        GT_rgb = ycbcr_to_rgb(dehaze_images)
+        GT_gray = transforms.Grayscale(num_output_channels=1)(GT_rgb)
+        GT_HF = F3.conv2d(GT_gray.cuda(), self.HF_filter.cuda(), padding='same', groups=1)
+
+        dehaze_images = torch.cat((dehaze_images, GT_LF, GT_HF), dim=1)
+
+        
 
         # unet loss
         unet_fake = self.discriminator(outputs.cuda())        
         unet_gan_loss = self.adversarial_loss(unet_fake, True, False) * 0.7
+        # print("unet_gan_loss", unet_gan_loss)
         unet_loss += unet_gan_loss
 
         unet_criterion = self.criterion(outputs.cuda(), dehaze_images.cuda())
+        # print("unet_criterion", unet_criterion)
         unet_loss += unet_criterion
 
 
@@ -161,19 +210,25 @@ class DoubleGANNet(nn.Module):
 
         gen_content_loss = self.content_loss(outputs.cuda(), dehaze_images.cuda())
         gen_content_loss = (gen_content_loss * 0.7).cuda()
+        # print("gen_content_loss", gen_content_loss)
         unet_loss += gen_content_loss.cuda()
         
         
         ssim_loss =  self.ssim_loss(outputs.cuda(), dehaze_images.cuda())
         ssim_loss = (1-ssim_loss)*2
+        # print("ssim_loss", ssim_loss)
         unet_loss += ssim_loss.cuda()
 
         # Original Discriminator
         # discriminator loss
         dis_real = self.discriminator(dehaze_images.cuda())        
-        dis_fake = self.discriminator(outputs.detach().cuda())       
+        dis_fake = self.discriminator(outputs.detach().cuda())    
+        # print("dis_real", dis_real)
+        # print("dis_fake", dis_fake)
         dis_real_loss = self.adversarial_loss(dis_real, True, True)
         dis_fake_loss = self.adversarial_loss(dis_fake, False, True)
+        # print("dis_real_loss", dis_real_loss)
+        # print("dis_fake_loss", dis_fake_loss)
         dis_loss += (dis_real_loss + dis_fake_loss) / 2
 
         return unet_loss, dis_loss, unet_criterion, 1-ssim_loss/2

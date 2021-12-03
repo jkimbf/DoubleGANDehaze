@@ -72,6 +72,9 @@ class VGG19(torch.nn.Module):
     def __init__(self):
         super().__init__()
         features = models.vgg19(pretrained=True).features
+        
+        self.reduce_dim = nn.Conv2d(in_channels=7, out_channels=3, kernel_size=1)
+
         self.relu1_1 = torch.nn.Sequential()
         self.relu1_2 = torch.nn.Sequential()
 
@@ -146,6 +149,7 @@ class VGG19(torch.nn.Module):
             param.requires_grad = False
 
     def forward(self, x):
+        x = self.reduce_dim(x)
         relu1_1 = self.relu1_1(x)
         relu1_2 = self.relu1_2(relu1_1)
 
