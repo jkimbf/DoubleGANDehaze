@@ -145,19 +145,21 @@ max_epochs = 100
 
 """ ===================================Configurations=================================== """
 # True: DoubleGANNet, False: BPPNet
-using_ours = False
+using_ours = True
 continue_training = True
 
-log_dir = "weights_211201"
+# log_dir = "weights_211201"
+log_dir = "ours_weights_211203"
 
-starting_epoch = 150
+starting_epoch = 100
 ending_epoch = 300
 
-dir_for_output_weights = 'weights_211201'
+dir_for_output_weights = 'ours_weights_211203'
 """ ==================================================================================== """
 
 if using_ours:
-    DUNet = DoubleGANNet(input_unet_channel, output_unet_channel, input_dis_channel).cuda()
+    # DUNet = DoubleGANNet(input_unet_channel, output_unet_channel, input_dis_channel).cuda()
+    DUNet = DoubleGANNet(input_unet_channel, output_unet_channel, 7).cuda()
     print('Using DoubleGANNet architecture')
 else:
     DUNet = DU_Net(input_unet_channel, output_unet_channel, input_dis_channel).cuda()

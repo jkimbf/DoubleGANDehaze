@@ -1,19 +1,24 @@
 from libraries import *
 from DU_Net import DU_Net
+from DoubleGANNet import DoubleGANNet
 
 graph_gloss = []
 input_unet_channel = 3
 output_unet_channel = 3
 input_dis_channel = 3
 max_epochs = 100
-DUNet = DU_Net(input_unet_channel ,output_unet_channel ,input_dis_channel).cuda()
+# DUNet = DU_Net(input_unet_channel ,output_unet_channel ,input_dis_channel).cuda()
+DUNet = DoubleGANNet(input_unet_channel, output_unet_channel, 7).cuda()
 
 
 # path_of_generator_weight = 'pretrained_weights/outdoor/generator.pth'  #path where the weights of genertaor are stored
 # path_of_discriminator_weight = 'pretrained_weights/outdoor/discriminator.pth'  #path where the weights of discriminator are stored
 
-path_of_generator_weight = 'weights_211201/generator_150.pth'  #path where the weights of genertaor are stored
-path_of_discriminator_weight = 'weights_211201/discriminator_150.pth'  #path where the weights of discriminator are stored
+# path_of_generator_weight = 'weights_211201/generator_300.pth'  #path where the weights of genertaor are stored
+# path_of_discriminator_weight = 'weights_211201/discriminator_300.pth'  #path where the weights of discriminator are stored
+
+path_of_generator_weight = 'ours_weights_211203/generator_100.pth'  #path where the weights of genertaor are stored
+path_of_discriminator_weight = 'ours_weights_211203/discriminator_100.pth'  #path where the weights of discriminator are stored
 
 DUNet.load(path_of_generator_weight,path_of_discriminator_weight)
 
@@ -29,7 +34,7 @@ def postprocess(img):
 
 
 path_of_test_hazy_images = 'O-Haze/train/haze/*'
-path_for_resultant_dehaze_images = 'results/train_211201_150/'
+path_for_resultant_dehaze_images = 'results/train_ours_100/'
 os.mkdir(path_for_resultant_dehaze_images)
 image_paths_test_hazy=glob.glob(path_of_test_hazy_images)
 
