@@ -148,18 +148,29 @@ max_epochs = 100
 using_ours = True
 continue_training = True
 
-# log_dir = "weights_211201"
-log_dir = "ours_weights_211203"
+log_dir = "ours_weights_211204"
+# log_dir = "rand_lr_ours_weights"
 
-starting_epoch = 100
-ending_epoch = 300
+starting_epoch = 300
+ending_epoch = 500
 
-dir_for_output_weights = 'ours_weights_211203'
+dir_for_output_weights = 'ours_weights_211204'
+# dir_for_output_weights = 'rand_lr_ours_weights'
+
+# gen_lr = 0.00036590325446559297
+# dis_lr = 1.1149579541239276e-05
+gen_lr = 0.00001
+dis_lr = 0.0005
 """ ==================================================================================== """
 
+# gen_exp = [10**e for e in np.random.uniform(low=-3, high=-1.5, size=(5,))]
+# dis_exp = [10**e for e in np.random.uniform(low=-5, high=-3, size=(5,))]
+
+# for gen_lr, dis_lr in zip(gen_exp, dis_exp):
+#     print("gen_lr={}, dis_lr={}".format(gen_lr, dis_lr))
 if using_ours:
     # DUNet = DoubleGANNet(input_unet_channel, output_unet_channel, input_dis_channel).cuda()
-    DUNet = DoubleGANNet(input_unet_channel, output_unet_channel, 7).cuda()
+    DUNet = DoubleGANNet(input_unet_channel, output_unet_channel, 7, gen_lr=gen_lr, dis_lr=dis_lr).cuda()
     print('Using DoubleGANNet architecture')
 else:
     DUNet = DU_Net(input_unet_channel, output_unet_channel, input_dis_channel).cuda()
@@ -171,6 +182,8 @@ if continue_training:
 
     path_of_generator_weight = '{}/generator_{}.pth'.format(log_dir, starting_epoch)  #path where the weights of genertaor are stored
     path_of_discriminator_weight = '{}/discriminator_{}.pth'.format(log_dir, starting_epoch)  #path where the weights of discriminator are stored
+    # path_of_generator_weight = 'lr_test_weights/generator_0.0036590325446559297_1.1149579541239276e-05_5.pth'  #path where the weights of genertaor are stored
+    # path_of_discriminator_weight = 'lr_test_weights/discriminator_0.0036590325446559297_1.1149579541239276e-05_5.pth'  #path where the weights of discriminator are stored
     DUNet.load(path_of_generator_weight,path_of_discriminator_weight)
 
 
@@ -203,6 +216,8 @@ def train(start_epoch, end_epochs):
         if not os.path.exists(dir_for_output_weights):
             os.mkdir(dir_for_output_weights)
         
+        # path_of_generator_weight = os.path.join(dir_for_output_weights, 'generator_'+str(gen_lr)+'_'+str(dis_lr)+'_'+str(epoch+1)+'.pth')  #path for storing the weights of genertaor
+        # path_of_discriminator_weight = os.path.join(dir_for_output_weights, 'discriminator_'+str(gen_lr)+'_'+str(dis_lr)+'_'+str(epoch+1)+'.pth')  #path for storing the weights of discriminator
         path_of_generator_weight = os.path.join(dir_for_output_weights, 'generator_'+str(epoch+1)+'.pth')  #path for storing the weights of genertaor
         path_of_discriminator_weight = os.path.join(dir_for_output_weights, 'discriminator_'+str(epoch+1)+'.pth')  #path for storing the weights of discriminator
         DUNet.save_weight(path_of_generator_weight,path_of_discriminator_weight)

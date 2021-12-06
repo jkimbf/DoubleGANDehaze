@@ -95,7 +95,7 @@ def create_window(window_size, channel):
 
 class DoubleGANNet(nn.Module):
 
-    def __init__(self, unet_input, unet_output, discriminator_input):
+    def __init__(self, unet_input, unet_output, discriminator_input, gen_lr, dis_lr):
         super().__init__()
 
 
@@ -134,13 +134,13 @@ class DoubleGANNet(nn.Module):
 
         self.unet_optimizer = optim.Adam(
             unet.parameters(), 
-            lr = float(0.00001),
+            lr = float(gen_lr),
             betas=(0.9, 0.999)
             )
 
         self.dis_optimizer = optim.Adam(
              params=discriminator.parameters(),
-             lr=float(0.00001),
+             lr=float(dis_lr),
              betas=(0.9, 0.999)
              )
 

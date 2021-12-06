@@ -6,3 +6,10 @@ O-Haze
 .ipynb*
 __pycache__
 ours_weights_211203
+Dense-Haze/
+Dense-Haze_results/
+NTIRE2021_NH-Haze2/
+NTIRE2021_results/
+lr_test_weights/
+ours_weights_211204/
+rand_lr_ours_weights/
