@@ -1,6 +1,6 @@
-# Generative Adversarial Networks for Single Image Dehazing
+# Generative Adversarial Networks for Effective Single Image Dehazing
 
-## COMP4471 Course Project
+## COMP4471 Course Project (2021-22 Fall)
 KIM, Jaehyeok (20550178)&nbsp;&nbsp;&nbsp;&nbsp;KIM, Hyeonjae (20543852)
 
 ## Abstract
