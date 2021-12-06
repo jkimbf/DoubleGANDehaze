@@ -1,6 +1,0 @@
-G(I) shape: torch.Size([8, 3, 512, 512])
-Epoch: 1 || Batch: 1 || unet loss: 3.375399112701416 || dis loss: 0.703222393989563 || mse: 0.03908904641866684 | ssim:0.20694971084594727
-G(I) shape: torch.Size([8, 3, 512, 512])
-Epoch: 1 || Batch: 2 || unet loss: 2.985456943511963 || dis loss: 2.2539310455322266 || mse: 0.033124249428510666 | ssim:0.3562185764312744
-loading error: O-Haze/train/haze/21_outdoor_hazy.JPG
-G(I) shape: torch.Size([8, 3, 512, 512])
