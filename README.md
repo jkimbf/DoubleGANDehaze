@@ -11,5 +11,5 @@ Single image dehazing is a challenging task which is critical for success in dow
 
 ## Links to base models
 The implementation of our project is based on the BPPNet and the implementation of the fusion discriminator is adopted from FD-GAN
-- BPPNet: https://github.com/ayu-22/BPPNet-Back-Projected-Pyramid-Network
-- FD-GAN: https://github.com/WeilanAnnn/FD-GAN
+- BPPNet (Singh et al.): https://github.com/ayu-22/BPPNet-Back-Projected-Pyramid-Network
+- FD-GAN (Dong et al.): https://github.com/WeilanAnnn/FD-GAN
